@@ -1,0 +1,12 @@
+{
+  "include": [
+    "."
+  ],
+  "extraPaths": [".venv/lib/python3.13/site-packages", "src/lib"],
+  "stubPath": ".venv/lib/python3.13/site-packages",
+  "typeCheckingMode": "basic",
+  "reportMissingModuleSource": false,
+  "reportMissingImports": true,
+  "reportImportCycles": false,
+  "pythonPlatform": "Linux"
+}

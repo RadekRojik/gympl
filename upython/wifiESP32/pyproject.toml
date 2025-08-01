@@ -1,0 +1,14 @@
+[project]
+name = "wifiesp32"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "esptool>=5.0.0",
+    "micropython-esp32-stubs>=1.25.0.post5",
+    "mpr>=1.32",
+]
