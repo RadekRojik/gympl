@@ -1,6 +1,7 @@
 from machine import Pin, I2C
 from micropython import const
 from time import sleep_ms
+from math import sqrt
 
 
 # mlx90614 datasheet at https://www.melexis.com/-/media/files/documents/datasheets/mlx90614-datasheet-melexis.pdf
@@ -34,6 +35,7 @@ class mlx90614:
     def __init__(self, SDA: int, SCL: int, SA: int = ADDR, freq: int = FREQ) -> None:
         self.SDA = SDA
         self.SCL = SCL
+        # Only one time create bytearrays. Reduced allocations.
         self.buf = bytearray(3)  # 0(LSB), 1(MSB), 2(PEC)
         # Create bytearray for checksum verification
         self.pec_buf = bytearray(5)  # 0(write addr), 1(register), 2(read addr), 3(LSB), 4(MSB)
@@ -45,7 +47,7 @@ class mlx90614:
         self.pec_buf[2] = (
             SA << 1 | 1
         )  # According to specification, shift 7bit address left by one bit plus 1 at the end for read
-        self.device = I2C(scl=Pin(self.SCL), sda=Pin(self.SDA), freq=self.freq)
+        self.device = I2C(id=0, scl=Pin(self.SCL), sda=Pin(self.SDA), freq=self.freq)
         
     # Helper method for reading 8b LSB + 8b MSB + 8b PEC = 24b = 3B register
     def read24(self, reg: int) -> int:
@@ -56,7 +58,7 @@ class mlx90614:
         return: 16b MSB with LSB
         """
         self.device.readfrom_mem_into(self.addr, reg, self.buf)
-        sleep_ms(5)  # Essential to avoid rapid repeated reading from registers
+        sleep_ms(2)  # Essential to avoid rapid repeated reading from registers
         return self.buf[0] | (self.buf[1] << 8)
 
     # PEC test
@@ -187,4 +189,4 @@ class mlx90614:
         Tm_K = self.raw_temp(R_TO1, secure)
         Ta_K = self.raw_temp(R_TA, secure)
         num = Tm_K**4 - (1 - emissivity) * Ta_K**4
-        return (num / emissivity) ** 0.25
+        return sqrt(sqrt(num/emissivity))
