@@ -70,9 +70,7 @@ class mlx90614:
         self.pec_buf[1] = reg
         self.pec_buf[3] = self.buf[0]
         self.pec_buf[4] = self.buf[1]
-        # to_test = [self.ADDR_WRITE, reg, self.ADDR_READ, self.buf[0], self.buf[1]]  # Create array for checksum verification
-        # if (self.result_pec(to_test) != self.buf[2]):  # Test if checksums match
-        if (self.result_pec(self.pec_buf) != self.buf[2]):
+        if (self.result_pec(self.pec_buf) != self.buf[2]):  # Test if checksums match
             print("WRONG PEC!")
             return False
         return True
