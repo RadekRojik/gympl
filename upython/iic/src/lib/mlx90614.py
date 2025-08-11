@@ -1,11 +1,12 @@
-from machine import Pin, SoftI2C
+from machine import Pin, I2C
 from micropython import const
+from time import sleep_ms
 
 
 # mlx90614 datasheet at https://www.melexis.com/-/media/files/documents/datasheets/mlx90614-datasheet-melexis.pdf
 
 ADDR = const(0x5A)  # Default I2C address of MLX90614
-FREQ = const(50_000)  # Communication frequency
+FREQ = const(100_000)  # Max communication frequency
 
 # RAM registers
 R_RAW_IR1 = const(0x04) # Raw value register for object1
@@ -33,18 +34,18 @@ class mlx90614:
     def __init__(self, SDA: int, SCL: int, SA: int = ADDR, freq: int = FREQ) -> None:
         self.SDA = SDA
         self.SCL = SCL
-        self.LSB = 0
-        self.MSB = 0
-        self.PEC = 0
+        self.buf = bytearray(3)  # 0(LSB), 1(MSB), 2(PEC)
+        # Create bytearray for checksum verification
+        self.pec_buf = bytearray(5)  # 0(write addr), 1(register), 2(read addr), 3(LSB), 4(MSB)
         self.addr = SA
         self.freq = freq
-        self.ADDR_WRITE = (
+        self.pec_buf[0] = (
             SA << 1 | 0
         )  # According to specification, shift 7bit address left by one bit plus 0 at the end for write
-        self.ADDR_READ = (
+        self.pec_buf[2] = (
             SA << 1 | 1
         )  # According to specification, shift 7bit address left by one bit plus 1 at the end for read
-        self.device = SoftI2C(scl=Pin(self.SCL), sda=Pin(self.SDA), freq=self.freq)
+        self.device = I2C(scl=Pin(self.SCL), sda=Pin(self.SDA), freq=self.freq)
         
     # Helper method for reading 8b LSB + 8b MSB + 8b PEC = 24b = 3B register
     def read24(self, reg: int) -> int:
@@ -52,11 +53,11 @@ class mlx90614:
         Reads 3 Bytes from register. Stores result in order LSB, MSB and PEC
         args:
             reg: int register address
-
         return: 16b MSB with LSB
         """
-        self.LSB, self.MSB, self.PEC = self.device.readfrom_mem(self.addr, reg, 3)  # Reads result including PEC bytes
-        return self.LSB | (self.MSB << 8)
+        self.device.readfrom_mem_into(self.addr, reg, self.buf)
+        sleep_ms(5)  # Essential to avoid rapid repeated reading from registers
+        return self.buf[0] | (self.buf[1] << 8)
 
     # PEC test
     def ok_test(self, reg) -> bool:
@@ -66,8 +67,12 @@ class mlx90614:
             reg: int register address
         return: bool
         """
-        to_test = [self.ADDR_WRITE, reg, self.ADDR_READ, self.LSB, self.MSB]  # Create array for checksum verification
-        if (self.result_pec(to_test) != self.PEC):  # Test if checksums match
+        self.pec_buf[1] = reg
+        self.pec_buf[3] = self.buf[0]
+        self.pec_buf[4] = self.buf[1]
+        # to_test = [self.ADDR_WRITE, reg, self.ADDR_READ, self.buf[0], self.buf[1]]  # Create array for checksum verification
+        # if (self.result_pec(to_test) != self.buf[2]):  # Test if checksums match
+        if (self.result_pec(self.pec_buf) != self.buf[2]):
             print("WRONG PEC!")
             return False
         return True

@@ -6,16 +6,18 @@ scl = 21
 mydev = mlx90614.mlx90614(SCL=scl, SDA=sda)
 
 emissivity = 0.98
-raw = 0
-ir = 1
+hysterese = 1
+global last
+last = 0
 
 while True:
-    ir = mydev.read24(0x04)
-    if (raw != ir):
-        raw = ir
-        print("teplota senzoru: ", mydev.to_C(mydev.t_ambient(True)))
-        print("teplota objektu: ", mydev.to_C(mydev.t_obj1(True)))
-        print("Emisivita: ", mydev.emissivity)
-        print("teplota objektu při změně emisivity: ", mydev.to_C(mydev.correct_temperature(emissivity)))
+    tmp = mydev.t_obj1(True)  # Basic single-register read
+    if not ((tmp + hysterese) > last > (tmp - hysterese)) or last == 0:  # If the temperature change is outside hysteresis, reprocess
+        last = tmp
+        print("Sensor temperature: ", mydev.to_C(mydev.t_ambient(True)))
+        print("Object temperature: ", mydev.to_C(tmp))
+        print("Emissivity: ", mydev.emissivity)
+        print("Last temperature: ", last)
+        print("Object temperature (with modified emissivity): ", mydev.to_C(mydev.correct_temperature(emissivity)))
         print("***")
-    sleep(1)
+    sleep(0.5)
