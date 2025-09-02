@@ -42,7 +42,7 @@ class mlx90614:
         self.addr = SA
         self.freq = freq
         self._emiss = 1.0
-        self._inversni_emiss = 1.0
+        self._inverzni_emiss = 1.0
         self.pec_buf[0] = (
             SA << 1 | 0
         )  # According to specification, shift 7bit address left by one bit plus 0 at the end for write
@@ -105,7 +105,7 @@ class mlx90614:
         if not(0.1 <= emissivity <=1.0):
             raise ValueError("emissivity must be 0.1–1.0")
         self._emiss = emissivity
-        self._inversni_emiss = 1.0/emissivity
+        self._inverzni_emiss = 1.0/emissivity
 
     # Helper method for calculating PEC (Packet Error Code) according to CRC-8 standard
     def result_pec(self, data_bytes):
@@ -227,4 +227,4 @@ class mlx90614:
         Ta_K = self.raw_temp(R_TA, secure)
         num = Tm_K**4 - (1 - self._emiss) * Ta_K**4
         if num <= 0: return Ta_K
-        return sqrt(sqrt(num*self._inversni_emiss))
+        return sqrt(sqrt(num*self._inverzni_emiss))

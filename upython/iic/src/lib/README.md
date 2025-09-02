@@ -1,0 +1,169 @@
+# MLX90614 Driver Documentation
+
+[🇨🇿 Czech](#cz) | [🇩🇪 German](#de) | [🇬🇧 English](#en)
+
+---
+
+<a name="cz"></a>
+**CZ**
+
+# Ovladač pro senzor MLX90614 v MicroPythonu
+
+MLX90614 je infračervený teploměr od firmy Melexis. Dokáže bezkontaktně měřit teplotu objektů i svou vlastní (okolní) teplotu. Velkou výhodou je široký měřící rozsah a jednoduchá komunikace přes sběrnici I²C.
+
+Ukažme si, jak napsat jednoduchý ovladač, který nám umožní snadno číst teploty a využít některé pokročilejší funkce senzoru.
+
+## Registry a `const`
+
+Nejdřív si nadefinujeme registry, ze kterých budeme číst data. Datasheet uvádí adresy pro teplotu, emisivitu a další parametry.
+
+Všimněme si klíčového slova `const`. To není standardní Python, ale rozšíření v MicroPythonu. Výhoda je, že se hodnota uloží už při překladu skriptu a během běhu programu se nemusí znovu vytvářet. Je to podobné jako `#define` v jazyce C – šetří paměť i výkon, což je na mikrokontrolérech důležité.
+
+## Třída `mlx90614`
+
+Celou funkcionalitu zabalíme do jedné třídy. Třída má několik atributů a metod, které odrážejí, jak senzor funguje.
+
+## Buffery (`bytearray`)
+
+V konstruktoru si vytvoříme dva `bytearray` buffery (`buf` a `pec_buf`). To je trik pro úsporu paměti a rychlejší práci – místo toho, abychom pokaždé alokovali nový seznam bajtů při čtení, používáme jeden předpřipravený blok paměti.
+
+- `buf` slouží pro samotná přečtená data (LSB, MSB, PEC).  
+- `pec_buf` slouží k ověření správnosti přenosu pomocí kontrolního součtu (PEC).
+
+## Metody
+
+- `read24(reg)` – přečte zvolený registr, uloží tři bajty do bufferu a vrátí kombinaci LSB+MSB jako číslo.  
+- `ok_test(reg)` – ověří, jestli kontrolní součet PEC sedí. Pokud ne, víme, že komunikace nebyla spolehlivá.  
+- `result_pec(data_bytes)` – spočítá PEC podle CRC-8 polynomu. To je standardní algoritmus na kontrolu chyb v datech.  
+- `raw_temp(reg, secure=False)` – přečte surovou teplotu z registru a vrátí ji v Kelvinech. Pokud je `secure=True`, provede i PEC kontrolu.  
+- `t_ambient()`, `t_obj1()`, `t_obj2()` – pohodlné metody pro čtení konkrétních teplot (okolní, objekt1, objekt2).  
+- `to_C(temp)`, `to_F(temp)` – převod z Kelvinů na °C a °F. Datasheet i senzor vždy pracuje v Kelvinech, takže převod je nutný.  
+- `correct_temperature()` – korekce teploty objektu podle nastavené emisivity (Stefan–Boltzmannův zákon). Hodí se, když měříme objekty s jinou emisivitou než 1.0 (např. lesklý kov).  
+
+## Vlastnosti
+
+- `reg_emissivity` – načte emisivitu uloženou přímo v EEPROM senzoru (výrobní nastavení).  
+- `emissivity` – vlastnost, kterou si nastaví uživatel. Není nutné pokaždé zapisovat do EEPROM (což má omezený počet přepisů). Proto se tu používá softwarová hodnota.  
+
+## Výhody řešení
+
+- Úspora paměti – použití `const` a `bytearray` místo zbytečných alokací.  
+- Bezpečnost dat – možnost ověřit PEC, takže víme, že data ze senzoru nejsou poškozená.  
+- Flexibilita – emisivitu můžeme nastavovat softwarově a tím šetříme omezené zápisy do EEPROM senzoru.  
+- Čitelnost kódu – metody mají jasná jména podle toho, co vrací (snadné pro studenty i další vývoj).  
+
+---
+
+<a name="de"></a>
+**DE**
+
+# Treiber für den MLX90614-Sensor in MicroPython
+
+Der MLX90614 ist ein Infrarot-Thermometer von Melexis.  
+Er kann die Temperatur von Objekten berührungslos messen sowie seine eigene (Umgebungs-)Temperatur.  
+Die Hauptvorteile sind ein großer Messbereich und die einfache Kommunikation über den I²C-Bus.
+
+Schauen wir uns an, wie man einen einfachen Treiber schreibt, mit dem wir Temperaturen bequem auslesen und einige erweiterte Funktionen des Sensors nutzen können.
+
+## Register und `const`
+
+Zuerst definieren wir die Register, aus denen wir Daten lesen.  
+Das Datenblatt enthält Adressen für Temperatur, Emissivität und weitere Parameter.
+
+Beachten Sie das Schlüsselwort `const`. Dies ist kein Standard-Python, sondern eine Erweiterung in **MicroPython**.  
+Der Vorteil: Der Wert wird bereits beim Kompilieren des Skripts gespeichert und muss zur Laufzeit nicht erneut erzeugt werden.  
+Das funktioniert ähnlich wie `#define` in C – spart Speicher und Rechenzeit, was auf Mikrocontrollern entscheidend ist.
+
+## Klasse `mlx90614`
+
+Die gesamte Funktionalität wird in eine Klasse gepackt.  
+Die Klasse besitzt mehrere Attribute und Methoden, die das Verhalten des Sensors abbilden.
+
+## Buffer (`bytearray`)
+
+Im Konstruktor erstellen wir zwei `bytearray`-Buffer (`buf` und `pec_buf`).  
+Dies spart Speicher und beschleunigt den Zugriff – anstatt bei jedem Lesevorgang ein neues Array anzulegen, nutzen wir vorbereitete Speicherblöcke.
+
+- `buf` speichert die gelesenen Daten (LSB, MSB, PEC).  
+- `pec_buf` dient zur Überprüfung der Datenintegrität mithilfe des Packet Error Code (PEC).
+
+## Methoden
+
+- `read24(reg)` – liest ein Register, speichert drei Bytes im Buffer und gibt LSB+MSB als Zahl zurück.  
+- `ok_test(reg)` – prüft, ob die PEC-Prüfsumme stimmt. Falls nicht, war die Kommunikation fehlerhaft.  
+- `result_pec(data_bytes)` – berechnet den PEC nach dem CRC-8-Polynom (Standardverfahren zur Fehlererkennung).  
+- `raw_temp(reg, secure=False)` – liest die Rohdaten aus einem Temperaturregister und gibt sie in Kelvin zurück. Mit `secure=True` wird zusätzlich PEC geprüft.  
+- `t_ambient()`, `t_obj1()`, `t_obj2()` – Komfortmethoden zum Auslesen spezifischer Temperaturen (Umgebung, Objekt1, Objekt2).  
+- `to_C(temp)`, `to_F(temp)` – Umrechnung von Kelvin in °C oder °F. Da Sensor und Datenblatt in Kelvin arbeiten, ist die Umrechnung notwendig.  
+- `correct_temperature()` – korrigiert die Objekttemperatur basierend auf der eingestellten Emissivität (Stefan–Boltzmann-Gesetz). Nützlich bei Objekten mit Emissivität ≠ 1.0 (z. B. glänzende Metalle).  
+
+## Eigenschaften
+
+- `reg_emissivity` – liest die im EEPROM gespeicherte Emissivität (Werkseinstellung).  
+- `emissivity` – benutzerdefinierte Eigenschaft. Vermeidet häufige EEPROM-Schreibvorgänge (begrenzte Lebensdauer) durch Nutzung einer Software-Variable.  
+
+## Vorteile der Lösung
+
+- **Speichereinsparung** – durch `const` und `bytearray` anstelle wiederholter Speicherallokationen.  
+- **Datensicherheit** – optionale PEC-Prüfung stellt sicher, dass Sensordaten nicht beschädigt sind.  
+- **Flexibilität** – Emissivität kann per Software gesetzt werden, EEPROM-Schreibzyklen werden geschont.  
+- **Lesbarkeit** – Methoden haben selbsterklärende Namen, die ihre Funktion klar machen (nützlich für Studenten und Entwickler).  
+
+---
+
+<a name="en"></a>
+**EN**
+
+# Driver for MLX90614 sensor in MicroPython
+
+The MLX90614 is an infrared thermometer manufactured by Melexis.  
+It can measure the temperature of objects without contact as well as its own (ambient) temperature.  
+The main advantages are a wide measuring range and simple communication over the I²C bus.
+
+Let’s look at how to write a simple driver that allows us to easily read temperatures and use some of the advanced features of the sensor.
+
+## Registers and `const`
+
+First we define the registers from which we will read data.  
+The datasheet provides addresses for temperature, emissivity, and other parameters.
+
+Notice the keyword `const`. This is not standard Python, but an extension in **MicroPython**.  
+Its advantage is that the value is stored at script compilation time and does not need to be created again during runtime.  
+It works similarly to `#define` in C – saving memory and performance, which is important on microcontrollers.
+
+## Class `mlx90614`
+
+All functionality is wrapped in a single class.  
+The class has several attributes and methods that reflect how the sensor operates.
+
+## Buffers (`bytearray`)
+
+In the constructor we create two `bytearray` buffers (`buf` and `pec_buf`).  
+This is a trick to save memory and improve performance – instead of allocating a new list of bytes for every read, we reuse a preallocated block.
+
+- `buf` stores the raw data read from the register (LSB, MSB, PEC).  
+- `pec_buf` is used to verify data integrity using the Packet Error Code (PEC).
+
+## Methods
+
+- `read24(reg)` – reads the selected register, stores three bytes into the buffer, and returns the combined LSB+MSB as an integer.  
+- `ok_test(reg)` – checks whether the PEC checksum is correct. If not, the communication was not reliable.  
+- `result_pec(data_bytes)` – calculates the PEC using the CRC-8 polynomial. This is a standard error detection algorithm.  
+- `raw_temp(reg, secure=False)` – reads the raw temperature from a register and returns it in Kelvin. If `secure=True`, PEC verification is performed.  
+- `t_ambient()`, `t_obj1()`, `t_obj2()` – convenience methods for reading specific temperatures (ambient, object1, object2).  
+- `to_C(temp)`, `to_F(temp)` – converts Kelvin to °C or °F. The sensor and datasheet always use Kelvin, so conversion is necessary.  
+- `correct_temperature()` – corrects the measured object temperature according to the user-set emissivity (Stefan–Boltzmann law).  
+  Useful when measuring objects with emissivity other than 1.0 (e.g., shiny metals).  
+
+## Properties
+
+- `reg_emissivity` – reads the emissivity value stored in the sensor’s EEPROM (factory setting).  
+- `emissivity` – a property that the user can set. This avoids writing to EEPROM every time (EEPROM has a limited write cycle).  
+  Instead, a software value is used.  
+
+## Advantages of this solution
+
+- **Memory saving** – by using `const` and `bytearray` instead of repeated allocations.  
+- **Data safety** – optional PEC verification ensures that sensor data is not corrupted.  
+- **Flexibility** – emissivity can be set in software, preserving the limited EEPROM writes.  
+- **Code readability** – methods have clear names that directly indicate what they return (easy for students and further development).  
