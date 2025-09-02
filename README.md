@@ -20,7 +20,7 @@ Název odkazuje na vzdělávací účel tohoto repozitáře: materiály slouží
 - **MLX90614 infračervený teploměr**  
   - [Zdrojový kód ovladače](./upython/iic/src/lib/mlx90614.py)  
   - [Ukázka použití](./upython/iic/src/main.py)  
-  - [Dokumentace (CZ/DE/EN)](./upython/iic/src/lib/mlx90614.md)
+  - [Dokumentace (CZ/DE/EN)](./upython/iic/src/lib/README.md)
 
 *(další ovladače a příklady budou přibývat postupně)*
 
