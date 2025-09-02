@@ -20,7 +20,7 @@ Název odkazuje na vzdělávací účel tohoto repozitáře: materiály slouží
 - **MLX90614 infračervený teploměr**  
   - [Zdrojový kód ovladače](./upython/iic/src/lib/mlx90614.py)  
   - [Ukázka použití](./upython/iic/src/main.py)  
-  - [Dokumentace (CZ/DE/EN)](./upython/iic/src/lib/README.md)
+  - [Dokumentace (CZ/DE/EN)](./upython/iic/src/lib/mlx90614.md)
 
 *(další ovladače a příklady budou přibývat postupně)*
 
@@ -42,7 +42,7 @@ Der Name unterstreicht den Bildungszweck dieses Repositories: als Lernmaterial f
 - **MLX90614 Infrarot-Thermometer**  
   - [Treiber-Quellcode](./upython/iic/src/lib/mlx90614.py)  
   - [Beispielcode](./upython/iic/src/main.py)  
-  - [Dokumentation (CZ/DE/EN)](./upython/iic/src/lib/README.md)
+  - [Dokumentation (CZ/DE/EN)](./upython/iic/src/lib/mlx90614.md)
 
 ---
 
@@ -62,7 +62,7 @@ The name reflects the educational purpose of this repository: primarily as teach
 - **MLX90614 infrared thermometer**  
   - [Driver source code](./upython/iic/src/lib/mlx90614.py)  
   - [Example usage](./upython/iic/src/main.py)  
-  - [Documentation (CZ/DE/EN)](./upython/iic/src/lib/README.md)
+  - [Documentation (CZ/DE/EN)](./upython/iic/src/lib/mlx90614.md)
 
 *(more drivers and examples will be added later)*
 
