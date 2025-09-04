@@ -1,6 +1,6 @@
 # Gympl – Educational MicroPython Examples
 
-[🇨🇿 Czech](#cz) | [🇩🇪 German](#de) | [🇬🇧 English](#en)
+[🇨🇿 Czech](#cz) | [🇩🇪 Deutsch](#de) | [🇬🇧 English](#en)
 
 ---
 
